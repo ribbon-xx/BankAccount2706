@@ -5,6 +5,7 @@ public class BankAccountDTO {
 	private String accountNumber;
 	private Long balance;
 	private Long timeStamp;
+	private String description;
 
 	public String getAccountNumber() {
 		return accountNumber;
@@ -28,6 +29,14 @@ public class BankAccountDTO {
 
 	public void setTimeStamp(Long timeStamp) {
 		this.timeStamp = timeStamp;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 }
