@@ -10,9 +10,9 @@ public class Transaction {
 	}
 
 	public TransactionDTO createTransaction(String accountNumber, long amount,
-			String description, long timeStamp) {
+			String description) {
 		TransactionDTO transactionDTO = new TransactionDTO(accountNumber,
-				amount, description, timeStamp);
+				amount, description, System.currentTimeMillis());
 		tDAO.doUpdate(transactionDTO);
 		return transactionDTO;
 	}

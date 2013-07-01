@@ -17,6 +17,7 @@ public class BankAccount {
 		BankAccountDTO baDTO = new BankAccountDTO();
 		baDTO.setAccountNumber(accountNumber);
 		baDTO.setBalance(0l);
+		baDTO.setTimeStamp(System.currentTimeMillis());
 		baDAO.doCreate(baDTO);
 		return baDTO;
 	}
@@ -33,16 +34,27 @@ public class BankAccount {
 	}
 
 	public void deposite(BankAccountDTO accountDTO, long amount,
-			String description, long timeStamp) {
+			String description) {
 		long newBalance = (long) (accountDTO.getBalance() + amount);
 		accountDTO.setBalance(newBalance);
 		accountDTO.setDescription(description);
-		accountDTO.setTimeStamp(timeStamp);
 		baDAO.doUpdate(accountDTO);
 		Transaction trans = new Transaction();
 		trans.setTransactionDao(tDAO);
 		trans.createTransaction(accountDTO.getAccountNumber(), amount,
-				description, timeStamp);
+				description);
+	}
+
+	public void withDraw(BankAccountDTO accountDTO, long amount,
+			String description) {
+		long newBalance = (long) (accountDTO.getBalance() - amount);
+		accountDTO.setBalance(newBalance);
+		accountDTO.setDescription(description);
+		baDAO.doUpdate(accountDTO);
+		Transaction trans = new Transaction();
+		trans.setTransactionDao(tDAO);
+		trans.createTransaction(accountDTO.getAccountNumber(), amount,
+				description);
 	}
 
 }

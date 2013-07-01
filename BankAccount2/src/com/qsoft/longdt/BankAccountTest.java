@@ -82,7 +82,11 @@ public class BankAccountTest extends TestCase {
 
 	@Test
 	public void testDepositSaveToDBWithTimeStamp() {
-		trans.createTransaction(accountNumber, 100, "de 100k", 123123123l);
+
+		trans.createTransaction(accountNumber, 100, "de 100k");
+
+		long timeStamp = System.currentTimeMillis();
+		when(mockCal.getTimeInMillis()).thenReturn(timeStamp);
 
 		ArgumentCaptor<TransactionDTO> argumentTransaction = ArgumentCaptor
 				.forClass(TransactionDTO.class);
@@ -92,5 +96,65 @@ public class BankAccountTest extends TestCase {
 		assertEquals(100, argumentTransaction.getValue().getAmount(), 0.01);
 		assertEquals("de 100k", argumentTransaction.getValue().getDescription());
 		assertTrue(argumentTransaction.getValue().getTimestamp() != 0);
+
+		assertEquals(timeStamp, argumentTransaction.getValue().getTimestamp());
+	}
+
+	@Test
+	public void testWithDraw() {
+		BankAccountDTO accountDTO = ba.openAccount(accountNumber);
+		ArgumentCaptor<BankAccountDTO> argument = ArgumentCaptor
+				.forClass(BankAccountDTO.class);
+		ba.withDraw(accountDTO, 50, "wd -50k");
+		verify(baDAO, times(1)).doUpdate(argument.capture());
+		assertEquals(-50, argument.getValue().getBalance(), 0.01);
+	}
+
+	@Test
+	public void testWithDrawTransaction() {
+		trans.createTransaction(accountNumber, 50, "wd 50k");
+		ArgumentCaptor<TransactionDTO> argumentTransaction = ArgumentCaptor
+				.forClass(TransactionDTO.class);
+		verify(tDAO).doUpdate(argumentTransaction.capture());
+		assertEquals(accountNumber, argumentTransaction.getValue()
+				.getAccountNumber());
+		assertEquals(50, argumentTransaction.getValue().getAmount(), 0.01);
+		assertEquals("wd 50k", argumentTransaction.getValue().getDescription());
+		assertTrue(argumentTransaction.getValue().getTimestamp() != 0);
+	}
+
+	@Test
+	public void testGetHistory() {
+		ArgumentCaptor<String> argumentTransaction = ArgumentCaptor
+				.forClass(String.class);
+		trans.getTransactionsOccurred(accountNumber);
+		verify(tDAO, times(1)).getTransactionsOccurredDao(
+				argumentTransaction.capture());
+		assertEquals(accountNumber, argumentTransaction.getValue());
+	}
+
+	@Test
+	public void testGetHistoryWithPeriodTime() {
+		trans.getTransactionsOccurred(accountNumber, 111111111l, 222222222l);
+		verify(tDAO, times(1)).getTransactionsOccurredDao(accountNumber,
+				111111111l, 222222222l);
+	}
+
+	@Test
+	public void testGetHistoryWithLimitedNumber() {
+		trans.getLimitTransactions(accountNumber, 5);
+		verify(tDAO, times(1)).getLimitTransactionDao(accountNumber, 5);
+	}
+
+	@Test
+	public void testSaveTimestampWhenOpenAccount() {
+		ArgumentCaptor<BankAccountDTO> argBADTO = ArgumentCaptor
+				.forClass(BankAccountDTO.class);
+		ba.openAccount(accountNumber);
+		Long timeStamp = System.currentTimeMillis();
+		when(mockCal.getTimeInMillis()).thenReturn(timeStamp);
+		verify(baDAO, times(1)).doCreate(argBADTO.capture());
+		assertTrue(argBADTO.getValue().getTimeStamp() != null);
+		assertEquals(timeStamp, argBADTO.getValue().getTimeStamp());
 	}
 }
